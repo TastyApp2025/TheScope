@@ -14,28 +14,46 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // ... (inside registerRoutes)
+  // Setup Auth (local strategy with Passport.js)
+  await setupAuth(app);
+
+  /**
+   * POST /auth/forgot-password - Send reset link
+   */
   app.post("/auth/forgot-password", async (req, res) => {
-    const { email } = req.body;
-    const token = await createResetToken(email);
-    if (token) {
-      const resetUrl = `${req.protocol}://${req.get("host")}/reset-password?token=${token}`;
-      await sendEmail({
-        subject: "Password Reset Request",
-        text: `To reset your password, please click the following link: ${resetUrl}`,
-        html: `<p>To reset your password, please click the following link: <a href="${resetUrl}">${resetUrl}</a></p>`,
-      });
+    try {
+      const { email } = req.body;
+      const token = await createResetToken(email);
+      if (token) {
+        const resetUrl = `${req.protocol}://${req.get("host")}/reset-password?token=${token}`;
+        await sendEmail({
+          subject: "Password Reset Request",
+          text: `To reset your password, please click the following link: ${resetUrl}`,
+          html: `<p>To reset your password, please click the following link: <a href="${resetUrl}">${resetUrl}</a></p>`,
+        });
+      }
+      res.json({ message: "If an account with that email exists, a reset link has been sent." });
+    } catch (err) {
+      console.error("Forgot password error:", err);
+      res.status(500).json({ message: "An error occurred. Please try again later." });
     }
-    res.json({ message: "If an account with that email exists, a reset link has been sent." });
   });
 
+  /**
+   * POST /auth/reset-password - Reset password with token
+   */
   app.post("/auth/reset-password", async (req, res) => {
-    const { token, password } = req.body;
-    const success = await resetPassword(token, password);
-    if (success) {
-      res.json({ message: "Password reset successful" });
-    } else {
-      res.status(400).json({ message: "Invalid or expired token" });
+    try {
+      const { token, password } = req.body;
+      const success = await resetPassword(token, password);
+      if (success) {
+        res.json({ message: "Password reset successful" });
+      } else {
+        res.status(400).json({ message: "Invalid or expired token" });
+      }
+    } catch (err) {
+      console.error("Reset password error:", err);
+      res.status(500).json({ message: "An error occurred. Please try again later." });
     }
   });
 
