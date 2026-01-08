@@ -100,8 +100,21 @@ export async function registerRoutes(
    * POST /auth/login - Login with email and password
    * Body: { email, password }
    */
-  app.post("/auth/login", passport.authenticate("local"), (req, res) => {
-    res.json({ message: "Logged in successfully", user: req.user });
+  app.post("/auth/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Authentication error", error: err.message });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      }
+      req.logIn(user, (loginErr) => {
+        if (loginErr) {
+          return res.status(500).json({ message: "Login failed", error: loginErr.message });
+        }
+        res.json({ message: "Logged in successfully", user });
+      });
+    })(req, res, next);
   });
 
   /**
