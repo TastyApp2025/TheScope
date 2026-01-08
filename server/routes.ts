@@ -7,12 +7,37 @@ import { setupAuth, requireAuth, registerUser } from "./auth/local";
 import { generateAudio } from "./openai";
 import passport from "passport";
 
+import { createResetToken, resetPassword } from "./utils/auth-utils";
+import { sendEmail } from "./utils/email";
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Setup Auth (local strategy with Passport.js)
-  await setupAuth(app);
+  // ... (inside registerRoutes)
+  app.post("/auth/forgot-password", async (req, res) => {
+    const { email } = req.body;
+    const token = await createResetToken(email);
+    if (token) {
+      const resetUrl = `${req.protocol}://${req.get("host")}/reset-password?token=${token}`;
+      await sendEmail({
+        subject: "Password Reset Request",
+        text: `To reset your password, please click the following link: ${resetUrl}`,
+        html: `<p>To reset your password, please click the following link: <a href="${resetUrl}">${resetUrl}</a></p>`,
+      });
+    }
+    res.json({ message: "If an account with that email exists, a reset link has been sent." });
+  });
+
+  app.post("/auth/reset-password", async (req, res) => {
+    const { token, password } = req.body;
+    const success = await resetPassword(token, password);
+    if (success) {
+      res.json({ message: "Password reset successful" });
+    } else {
+      res.status(400).json({ message: "Invalid or expired token" });
+    }
+  });
 
   // ============================================
   // AUTHENTICATION ROUTES
@@ -24,19 +49,19 @@ export async function registerRoutes(
    */
   app.post("/auth/register", async (req, res) => {
     try {
-      const { email, username, password, firstName, lastName } = req.body;
+    const { email, username, password, firstName, lastName } = req.body;
 
-      if (!email || !username || !password) {
-        return res.status(400).json({
-          message: "Email, username, and password are required",
-        });
-      }
+    if (!email || !username || !password) {
+      return res.status(400).json({
+        message: "Email, username, and password are required",
+      });
+    }
 
-      const user = await registerUser(email, username, password, firstName, lastName);
+    const user = await registerUser(email, username, password, firstName, lastName);
 
-      if (!user) {
-        return res.status(500).json({ message: "Registration failed" });
-      }
+    if (!user) {
+      return res.status(500).json({ message: "Registration failed" });
+    }
 
       // Automatically log in after registration
       req.logIn(user, (err) => {

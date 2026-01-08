@@ -9,6 +9,8 @@ import StoryPage from "@/pages/story";
 import AdminPage from "@/pages/admin";
 import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
+import ForgotPasswordPage from "@/pages/forgot-password";
+import ResetPasswordPage from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
@@ -59,6 +61,8 @@ function Router() {
       <Route path="/stories/:id" component={StoryPage} />
       <Route path="/access-portal" component={LoginPage} />
       <Route path="/create-access" component={RegisterPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/dashboard-internal" component={() => <ProtectedAdminRoute component={AdminPage} />} />
       <Route component={NotFound} />
     </Switch>

@@ -106,9 +106,18 @@ export default function LoginPage() {
             </div>
           </div>
 
+          <div className="mt-2 text-right">
+            <button
+              onClick={() => setLocation("/forgot-password")}
+              className="text-xs text-primary hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
+
           <Button
             type="submit"
-            className="w-full"
+            className="w-full mt-4"
             disabled={isLoading}
             size="lg"
           >
