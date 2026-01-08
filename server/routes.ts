@@ -34,6 +34,10 @@ export async function registerRoutes(
 
       const user = await registerUser(email, username, password, firstName, lastName);
 
+      if (!user) {
+        return res.status(500).json({ message: "Registration failed" });
+      }
+
       // Automatically log in after registration
       req.logIn(user, (err) => {
         if (err) {
