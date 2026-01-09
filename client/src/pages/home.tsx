@@ -19,13 +19,11 @@ export default function Home() {
         <link rel="canonical" href="https://thescope.replit.app/" />
       </Helmet>
       <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-center justify-between h-14 px-4 max-w-2xl mx-auto">
+        <div className="flex items-center justify-between h-20 px-4 max-w-2xl mx-auto">
           <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors" onClick={() => {}} title="Menu">
             <Menu className="w-6 h-6" />
           </button>
-          <h1 className="font-serif font-black text-2xl tracking-tight text-[#111318] dark:text-white text-center">
-            The Scope
-          </h1>
+          <img src="/branding.jpg" alt="The Scope" className="h-12 object-contain" />
           <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors" onClick={() => {}} title="Search">
             <Search className="w-6 h-6" />
           </button>
