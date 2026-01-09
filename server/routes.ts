@@ -208,8 +208,6 @@ export async function registerRoutes(
       const message = err instanceof Error ? err.message : "Failed to generate audio";
       const status = /OPENAI_API_KEY|OpenAI_API_KEY/i.test(message) ? 503 : 500;
       res.status(status).json({ message });
-      }
-      throw err;
     }
   });
 
