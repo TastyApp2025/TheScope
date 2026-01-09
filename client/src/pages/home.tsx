@@ -14,19 +14,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950">
       <Helmet>
-        <title>The Scope | Latest Stories & Insights</title>
+        <title>The Scope | Latest Stories</title>
         <meta name="description" content="Browse the latest editorial stories, news, and insights on The Scope." />
         <link rel="canonical" href="https://thescope.replit.app/" />
       </Helmet>
       <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between h-14 px-4 max-w-2xl mx-auto">
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors" onClick={() => {}} title="Menu">
             <Menu className="w-6 h-6" />
           </button>
           <h1 className="font-serif font-black text-2xl tracking-tight text-[#111318] dark:text-white text-center">
             The Scope
           </h1>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors" onClick={() => {}} title="Search">
             <Search className="w-6 h-6" />
           </button>
         </div>
@@ -74,10 +74,18 @@ export default function Home() {
           </Link>
         ))}
         
-        <div className="flex flex-col items-center justify-center py-8 gap-3 opacity-60">
-          <div className="w-8 h-8 border-2 border-primary rounded-full border-t-transparent animate-spin"></div>
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Loading stories</p>
-        </div>
+        {isLoading && !stories && (
+          <div className="flex flex-col items-center justify-center py-8 gap-3 opacity-60">
+            <div className="w-8 h-8 border-2 border-primary rounded-full border-t-transparent animate-spin"></div>
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Loading stories</p>
+          </div>
+        )}
+        
+        {!isLoading && (!stories || stories.length === 0) && (
+          <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-60">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No stories available yet</p>
+          </div>
+        )}
       </main>
     </div>
   );

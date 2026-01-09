@@ -126,7 +126,35 @@ export default function AdminPage() {
     },
   });
 
+  const validateImageUrl = (url: string): boolean => {
+    if (!url) return true; // Allow empty optional fields
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const onSubmit = (data: any) => {
+    // Validate image URLs before submission
+    if (data.coverImageUrl && !validateImageUrl(data.coverImageUrl)) {
+      toast({
+        title: "Invalid URL",
+        description: "Cover image URL must be a valid web address (e.g., https://...)",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (data.authorProfileImage && !validateImageUrl(data.authorProfileImage)) {
+      toast({
+        title: "Invalid URL",
+        description: "Author profile image URL must be a valid web address (e.g., https://...)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (editingStory) {
       updateMutation.mutate({ id: editingStory.id, data });
     } else {
@@ -236,7 +264,7 @@ export default function AdminPage() {
                       
                       <div className="grid grid-cols-2 gap-6">
                         <FormField control={form.control} name="coverImageUrl" render={({ field }) => (
-                          <FormItem><FormLabel>Cover Image URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
+                          <FormItem><FormLabel>Cover Image URL</FormLabel><FormControl><Input placeholder="https://example.com/image.jpg" {...field} /></FormControl><p className="text-xs text-muted-foreground mt-1">Tip: Use full URL starting with https://</p><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="category" render={({ field }) => (
                           <FormItem><FormLabel>Category</FormLabel><FormControl><Input {...field} value={field.value ?? ""} placeholder="e.g. Technology" /></FormControl><FormMessage /></FormItem>
@@ -248,7 +276,7 @@ export default function AdminPage() {
                           <FormItem><FormLabel>Author Name</FormLabel><FormControl><Input placeholder="Full name" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="authorProfileImage" render={({ field }) => (
-                          <FormItem><FormLabel>Author Avatar URL</FormLabel><FormControl><Input {...field} value={field.value ?? ""} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
+                          <FormItem><FormLabel>Author Avatar URL</FormLabel><FormControl><Input {...field} value={field.value ?? ""} placeholder="https://example.com/avatar.jpg" /></FormControl><p className="text-xs text-muted-foreground mt-1">Optional: Full URL to author profile image</p><FormMessage /></FormItem>
                         )} />
                       </div>
                       

@@ -1,9 +1,8 @@
 import nodemailer from "nodemailer";
 
-export async function sendEmail({ subject, text, html }: { subject: string; text?: string; html?: string }) {
-  // Use environment variable for the recipient if available, otherwise it will need to be provided in the call
-  // For a generic reset system, we should allow passing 'to'
-  const to = process.env.ADMIN_EMAIL || process.env.USER_EMAIL; 
+export async function sendEmail({ to, subject, text, html }: { to?: string; subject: string; text?: string; html?: string }) {
+  // Use provided 'to' or fallback to environment variable
+  const recipient = to || process.env.ADMIN_EMAIL || process.env.USER_EMAIL; 
 
   // Fallback to console log if no SMTP configured
   if (!process.env.SMTP_HOST) {
@@ -26,7 +25,7 @@ export async function sendEmail({ subject, text, html }: { subject: string; text
 
   return await transporter.sendMail({
     from: process.env.EMAIL_FROM || "noreply@thescope.com",
-    to: to,
+    to: recipient,
     subject,
     text,
     html,

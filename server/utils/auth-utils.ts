@@ -27,7 +27,13 @@ export async function resetPassword(token: string, newPassword: string) {
     )
   );
 
-  if (!user) return false;
+  if (!user) {
+    // Invalidate token immediately on failed attempt to prevent retry attacks
+    await db.update(users)
+      .set({ resetToken: null, resetTokenExpires: null })
+      .where(eq(users.resetToken, token));
+    return false;
+  }
 
   const passwordHash = await hashPassword(newPassword);
   await db.update(users)
