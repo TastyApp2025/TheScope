@@ -75,7 +75,14 @@ export default function StoryPage() {
         method: "POST",
       });
       
-      if (!res.ok) throw new Error("Failed to generate audio");
+      if (!res.ok) {
+        let errMsg = "Failed to generate audio";
+        try {
+          const body = await res.json();
+          if (body?.message) errMsg = body.message;
+        } catch {}
+        throw new Error(errMsg);
+      }
       
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -90,7 +97,8 @@ export default function StoryPage() {
       };
     } catch (err) {
       console.error("Audio playback error:", err);
-      alert("Failed to play AI audio. Please check your OpenAI API key.");
+      const msg = err instanceof Error ? err.message : "Failed to play AI audio.";
+      alert(`${msg} Please check your OpenAI API key.`);
     } finally {
       setIsAudioLoading(false);
     }

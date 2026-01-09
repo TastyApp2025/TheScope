@@ -205,21 +205,9 @@ export async function registerRoutes(
       res.send(audioBuffer);
     } catch (err) {
       console.error(err);
-      res.status(500).json({ message: "Failed to generate audio" });
-    }
-  });
-
-  app.put(api.stories.update.path, requireAuth, async (req, res) => {
-    try {
-      const input = api.stories.update.input.parse(req.body);
-      const story = await storage.updateStory(Number(req.params.id), input);
-      res.json(story);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({
-          message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
-        });
+      const message = err instanceof Error ? err.message : "Failed to generate audio";
+      const status = /OPENAI_API_KEY|OpenAI_API_KEY/i.test(message) ? 503 : 500;
+      res.status(status).json({ message });
       }
       throw err;
     }

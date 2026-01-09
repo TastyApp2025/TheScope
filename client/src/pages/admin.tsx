@@ -81,9 +81,17 @@ export default function AdminPage() {
       const res = await fetch(`/api/stories/${id}/generate-audio`, {
         method: "POST",
       });
-      if (!res.ok) throw new Error("Failed to generate audio");
+      if (!res.ok) {
+        let errMsg = "Failed to generate audio";
+        try {
+          const body = await res.json();
+          if (body?.message) errMsg = body.message;
+        } catch {}
+        throw new Error(errMsg);
+      }
       return res.blob();
     },
+
     onSuccess: () => {
       toast({ 
         title: "Audio Generated", 
