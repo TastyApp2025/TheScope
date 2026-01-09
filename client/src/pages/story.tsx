@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link, useLocation } from "wouter";
 import { Story } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Bookmark, Share2, PlayCircle, ChevronDown } from "lucide-react";
+import { ArrowLeft, Bookmark, Share2, PlayCircle, ChevronDown, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 
@@ -53,21 +53,47 @@ export default function StoryPage() {
     };
   }, [id, nextStory, setLocation]);
 
-  const handleListen = () => {
-    if (!story || !story.content) return;
-    
-    // Check if speech is already playing
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
+  const [isAudioLoading, setIsAudioLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleListen = async () => {
+    if (!story) return;
+
+    // Toggle play/pause if audio already exists
+    if (audioRef.current) {
+      if (audioRef.current.paused) {
+        audioRef.current.play();
+      } else {
+        audioRef.current.pause();
+      }
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(story.content);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.lang = 'en-US';
-    
-    window.speechSynthesis.speak(utterance);
+    try {
+      setIsAudioLoading(true);
+      const res = await fetch(`/api/stories/${id}/generate-audio`, {
+        method: "POST",
+      });
+      
+      if (!res.ok) throw new Error("Failed to generate audio");
+      
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.play();
+      
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        audioRef.current = null;
+      };
+    } catch (err) {
+      console.error("Audio playback error:", err);
+      alert("Failed to play AI audio. Please check your OpenAI API key.");
+    } finally {
+      setIsAudioLoading(false);
+    }
   };
 
   const handleShare = async () => {
@@ -141,7 +167,7 @@ export default function StoryPage() {
         </button>
       </nav>
 
-      <header className="relative w-full h-[55vh] min-h-[420px]">
+      <header className="relative w-full h-[60vh] min-h-[480px]">
         <img 
           src={story.coverImageUrl} 
           alt={story.title}
@@ -151,15 +177,15 @@ export default function StoryPage() {
             (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&q=80&w=2000';
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 w-full p-5 pb-8 flex flex-col gap-3">
-          <span className="inline-block px-2 py-1 bg-primary text-white text-xs font-bold uppercase tracking-wider rounded w-fit">
-            {story.category || "Architecture"}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 w-full p-6 pb-10 flex flex-col gap-4">
+          <span className="inline-block px-3 py-1 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-sm w-fit shadow-lg shadow-black/20">
+            {story.category || "General"}
           </span>
-          <h1 className="font-serif text-[32px] font-bold leading-[1.15] text-white tracking-tight drop-shadow-sm">
+          <h1 className="font-serif text-[34px] md:text-4xl font-bold leading-[1.1] text-white tracking-tight drop-shadow-2xl">
             {story.title}
           </h1>
-          <p className="text-white/90 text-lg font-medium leading-snug font-display mt-1">
+          <p className="text-white/95 text-lg font-medium leading-normal font-display mt-2 drop-shadow-md max-w-[95%]">
             {story.summary}
           </p>
         </div>
@@ -185,10 +211,17 @@ export default function StoryPage() {
         <div className="flex items-center gap-3 mb-8">
           <button 
             onClick={handleListen}
-            className="flex-1 h-12 bg-primary text-white rounded-full flex items-center justify-center gap-2 hover:bg-primary/90 transition shadow-sm group"
+            disabled={isAudioLoading}
+            className="flex-1 h-12 bg-primary text-white rounded-full flex items-center justify-center gap-2 hover:bg-primary/90 transition shadow-sm group disabled:opacity-70"
           >
-            <PlayCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-semibold">Listen to Article</span>
+            {isAudioLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <PlayCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            )}
+            <span className="text-sm font-semibold">
+              {isAudioLoading ? "Generating..." : "Listen to Article"}
+            </span>
           </button>
           <button 
             onClick={handleShare}

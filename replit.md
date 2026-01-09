@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Scope is a full-stack TypeScript news and editorial content management platform. It features a mobile-first React frontend for reading stories with immersive design, and an Express backend with PostgreSQL for data persistence. The platform includes an admin dashboard for content management, AI-powered audio narration via OpenAI TTS, and cloud-based image storage through Cloudinary.
+The Scope is a news/editorial content management platform built as a full-stack TypeScript application. It features a React frontend with a mobile-first design for reading stories, and an Express backend with PostgreSQL for data persistence. The platform includes user authentication, story management with CRUD operations, Cloudinary integration for image storage, and OpenAI integration for text-to-speech audio generation.
 
 ## User Preferences
 
@@ -13,64 +13,63 @@ Preferred communication style: Simple, everyday language.
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript
 - **Routing**: Wouter (lightweight React router)
-- **State Management**: TanStack React Query for server state caching
+- **State Management**: TanStack React Query for server state
 - **Styling**: Tailwind CSS with shadcn/ui component library (Radix UI primitives)
-- **Build Tool**: Vite with path aliases (`@/` for client/src, `@shared/` for shared code)
+- **Build Tool**: Vite with path aliases (@/ for client/src, @shared/ for shared code)
 - **Form Handling**: React Hook Form with Zod validation
-- **SEO**: React Helmet Async for dynamic meta tags
 
-The frontend follows a page-based structure under `client/src/pages/` with reusable UI components in `client/src/components/ui/`. Custom hooks in `client/src/hooks/` handle authentication state and mobile detection.
+The frontend follows a page-based structure under `client/src/pages/` with reusable UI components in `client/src/components/ui/`. Custom hooks in `client/src/hooks/` handle authentication state and responsive design.
 
 ### Backend Architecture
 - **Framework**: Express.js with TypeScript
 - **Database ORM**: Drizzle ORM with PostgreSQL
 - **Authentication**: Passport.js with local strategy (username/password)
 - **Session Storage**: PostgreSQL-backed sessions via connect-pg-simple
-- **Password Security**: bcrypt for hashing (10 salt rounds)
+- **Password Security**: bcrypt for hashing
 
-The backend serves both the API (`/api/*` routes) and the static frontend in production. In development, Vite's dev server handles the frontend with HMR. The server entry point is `server/index.ts`.
+The backend serves both the API (`/api/*` routes) and the static frontend in production. In development, Vite's dev server handles the frontend with HMR.
 
 ### Authentication System
 - Local authentication with email/username and password
 - Session-based authentication stored in PostgreSQL
-- Password reset flow with email tokens
+- Password hashing with bcrypt (10 salt rounds)
 - Protected routes via `requireAuth` middleware
-- Auth endpoints: `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/user`, `/auth/forgot-password`, `/auth/reset-password`
+- Auth endpoints: `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/user`
 
-### Data Models
-- **stories**: Editorial content with title, summary, content, cover image, category, optional audio URL, author info, and timestamps
-- **users**: Authentication with email, username, password hash, profile info, and password reset tokens
-- **sessions**: Express session storage for persistent logins
+### Data Storage
+- **Database**: PostgreSQL with Drizzle ORM
+- **Schema Location**: `shared/schema.ts` and `shared/models/auth.ts`
+- **Tables**: stories (content), users (auth), sessions (session storage)
+- **Migrations**: Drizzle Kit with `db:push` command
 
 ### API Structure
-- RESTful endpoints defined in `shared/routes.ts` with Zod schemas for validation
+- RESTful endpoints defined in `shared/routes.ts` with Zod schemas
 - Stories CRUD: GET/POST/PUT/DELETE `/api/stories`
-- Audio generation: POST `/api/stories/:id/audio` (uses OpenAI TTS)
+- Audio generation: POST `/api/stories/:id/audio`
 
 ### Build & Deployment
-- Development: `npm run dev` runs tsx for the server with Vite middleware
-- Production build: `npm run build` compiles client with Vite and bundles server with esbuild to CommonJS
-- Database migrations: `npm run db:push` uses Drizzle Kit to push schema changes
-- The app is designed to be platform-independent and deployable to services like Render
+- Development: `npm run dev` (tsx for server, Vite for client)
+- Production build: `npm run build` creates `dist/` with bundled server and static frontend
+- Production start: `npm run start` serves from `dist/`
+- The app is designed to be platform-independent (not Replit-specific)
 
 ## External Dependencies
 
 ### Database
-- **PostgreSQL**: Primary data store, connection via `DATABASE_URL` environment variable
-- **Drizzle ORM**: Schema defined in `shared/schema.ts` and `shared/models/auth.ts`
-- SSL enabled in production with `rejectUnauthorized: false`
+- **PostgreSQL**: Required via `DATABASE_URL` environment variable
+- Session table must exist (created by connect-pg-simple or manually)
 
 ### Cloud Services
 - **Cloudinary**: Image upload and storage via `CLOUDINARY_URL` environment variable
-- **OpenAI API**: Text-to-speech audio generation via `OpenAI_API_KEY` environment variable
+- Images are uploaded to Cloudinary and URLs stored in database
+- Handles base64 and URL-based uploads
 
-### Email
-- **Nodemailer**: Password reset emails via SMTP configuration
-- Environment variables: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`
+### AI Services
+- **OpenAI API**: Text-to-speech generation via `OPENAI_API_KEY` environment variable
+- Uses TTS-1 model with "alloy" voice for audio narration
 
-### Key Environment Variables
-- `DATABASE_URL`: PostgreSQL connection string (required)
-- `SESSION_SECRET`: Session encryption key (defaults to dev secret)
-- `CLOUDINARY_URL`: Cloudinary credentials for image uploads
-- `OpenAI_API_KEY`: OpenAI API key for audio generation
-- `NODE_ENV`: Set to "production" for production builds
+### Environment Variables Required
+- `DATABASE_URL`: PostgreSQL connection string
+- `SESSION_SECRET`: Secret for session encryption (defaults to dev secret)
+- `CLOUDINARY_URL`: Cloudinary credentials (format: cloudinary://api_key:api_secret@cloud_name)
+- `OPENAI_API_KEY`: OpenAI API key for audio generation

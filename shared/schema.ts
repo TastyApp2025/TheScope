@@ -14,6 +14,7 @@ export const stories = pgTable("stories", {
   audioUrl: text("audio_url"),
   authorName: text("author_name").notNull(),
   authorProfileImage: text("author_profile_image"),
+  isBreaking: boolean("is_breaking").default(false),
   publishedAt: timestamp("published_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });

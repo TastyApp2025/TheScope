@@ -11,8 +11,8 @@ export async function generateAudio(text: string): Promise<Buffer> {
   const openai = new OpenAI({ apiKey });
 
   const mp3 = await openai.audio.speech.create({
-    model: "tts-1-hd",
-    voice: "nova",
+    model: "tts-1",
+    voice: "alloy",
     input: text,
   });
 

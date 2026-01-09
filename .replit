@@ -5,6 +5,7 @@ packages = ["unzip"]
 
 [agent]
 expertMode = true
+integrations = ["replitmail:1.0.0"]
 
 [workflows]
 runButton = "Project"
@@ -16,15 +17,15 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "The Scope Dev Server"
+args = "Development Server"
 
 [[workflows.workflow]]
-name = "The Scope Dev Server"
+name = "Development Server"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd \"zip-repl/The Scope\" && npm run dev"
+args = "npm run dev"
 waitForPort = 5000
 
 [workflows.workflow.metadata]

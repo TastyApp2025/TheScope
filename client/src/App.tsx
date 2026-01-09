@@ -17,10 +17,13 @@ import { useState, useEffect } from "react";
 
 function SplashScreen() {
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-white dark:bg-[#101622] animate-in fade-in duration-700">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/5 pointer-events-none opacity-50 dark:opacity-20"></div>
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-white animate-in fade-in duration-700">
       <div className="relative z-10 flex flex-col items-center justify-center p-6 animate-in slide-in-from-bottom-5 duration-1000">
-        <img src="/branding.jpg" alt="The Scope" className="max-w-xs md:max-w-md lg:max-w-lg h-auto object-contain" />
+        <img 
+          src="/assets/logo.jpg" 
+          alt="The Scope" 
+          className="w-64 md:w-80 lg:w-96 h-auto object-contain"
+        />
       </div>
     </main>
   );
@@ -47,7 +50,7 @@ function Router() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 3000);
+    }, 1000);
     return () => clearTimeout(timer);
   }, []);
 

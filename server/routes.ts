@@ -27,7 +27,6 @@ export async function registerRoutes(
       if (token) {
         const resetUrl = `${req.protocol}://${req.get("host")}/reset-password?token=${token}`;
         await sendEmail({
-          to: email,
           subject: "Password Reset Request",
           text: `To reset your password, please click the following link: ${resetUrl}`,
           html: `<p>To reset your password, please click the following link: <a href="${resetUrl}">${resetUrl}</a></p>`,
@@ -166,30 +165,6 @@ export async function registerRoutes(
     try {
       const input = api.stories.create.input.parse(req.body);
       
-      // Validate image URLs
-      const validateUrl = (url: string): boolean => {
-        try {
-          new URL(url);
-          return true;
-        } catch {
-          return false;
-        }
-      };
-      
-      if (!validateUrl(input.coverImageUrl)) {
-        return res.status(400).json({
-          message: "Invalid cover image URL. Must be a valid web address (e.g., https://...)",
-          field: "coverImageUrl",
-        });
-      }
-      
-      if (input.authorProfileImage && !validateUrl(input.authorProfileImage)) {
-        return res.status(400).json({
-          message: "Invalid author profile image URL. Must be a valid web address (e.g., https://...)",
-          field: "authorProfileImage",
-        });
-      }
-      
       // Generate audio automatically if not provided
       if (!input.audioUrl && input.content) {
         try {
@@ -221,7 +196,6 @@ export async function registerRoutes(
       const id = Number(req.params.id);
       const story = await storage.getStory(id);
       if (!story) return res.status(404).send("Story not found");
-      if (!story.content) return res.status(400).json({ message: "Story content is empty" });
 
       const audioBuffer = await generateAudio(story.content);
       
@@ -230,7 +204,7 @@ export async function registerRoutes(
       res.set("Content-Type", "audio/mpeg");
       res.send(audioBuffer);
     } catch (err) {
-      console.error("Audio generation error:", err);
+      console.error(err);
       res.status(500).json({ message: "Failed to generate audio" });
     }
   });
@@ -238,31 +212,6 @@ export async function registerRoutes(
   app.put(api.stories.update.path, requireAuth, async (req, res) => {
     try {
       const input = api.stories.update.input.parse(req.body);
-      
-      // Validate image URLs if provided
-      const validateUrl = (url: string): boolean => {
-        try {
-          new URL(url);
-          return true;
-        } catch {
-          return false;
-        }
-      };
-      
-      if (input.coverImageUrl && !validateUrl(input.coverImageUrl)) {
-        return res.status(400).json({
-          message: "Invalid cover image URL. Must be a valid web address (e.g., https://...)",
-          field: "coverImageUrl",
-        });
-      }
-      
-      if (input.authorProfileImage && !validateUrl(input.authorProfileImage)) {
-        return res.status(400).json({
-          message: "Invalid author profile image URL. Must be a valid web address (e.g., https://...)",
-          field: "authorProfileImage",
-        });
-      }
-      
       const story = await storage.updateStory(Number(req.params.id), input);
       res.json(story);
     } catch (err) {

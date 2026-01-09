@@ -21,16 +21,6 @@ export default function ResetPasswordPage() {
       toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
       return;
     }
-    // Validate password strength: at least 8 chars, one uppercase, one number, one special char
-    const passwordStrengthRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordStrengthRegex.test(password)) {
-      toast({
-        title: "Weak Password",
-        description: "Password must contain uppercase letter, number, and special character (@$!%*?&)",
-        variant: "destructive"
-      });
-      return;
-    }
     setIsLoading(true);
 
     try {

@@ -4,6 +4,7 @@ import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -22,7 +23,7 @@ import {
   ChevronRight,
   Search
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -114,7 +115,7 @@ export default function AdminPage() {
 
   const form = useForm({
     resolver: zodResolver(insertStorySchema),
-    defaultValues: editingStory || {
+    defaultValues: {
       title: "",
       summary: "",
       content: "",
@@ -123,38 +124,30 @@ export default function AdminPage() {
       authorName: "",
       authorProfileImage: "",
       audioUrl: "",
+      isBreaking: false,
     },
   });
 
-  const validateImageUrl = (url: string): boolean => {
-    if (!url) return true; // Allow empty optional fields
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
+  // Update form when editingStory changes
+  useEffect(() => {
+    if (editingStory) {
+      form.reset(editingStory);
+    } else {
+      form.reset({
+        title: "",
+        summary: "",
+        content: "",
+        coverImageUrl: "",
+        category: "Politics",
+        authorName: "",
+        authorProfileImage: "",
+        audioUrl: "",
+        isBreaking: false,
+      });
     }
-  };
+  }, [editingStory, form]);
 
   const onSubmit = (data: any) => {
-    // Validate image URLs before submission
-    if (data.coverImageUrl && !validateImageUrl(data.coverImageUrl)) {
-      toast({
-        title: "Invalid URL",
-        description: "Cover image URL must be a valid web address (e.g., https://...)",
-        variant: "destructive"
-      });
-      return;
-    }
-    if (data.authorProfileImage && !validateImageUrl(data.authorProfileImage)) {
-      toast({
-        title: "Invalid URL",
-        description: "Author profile image URL must be a valid web address (e.g., https://...)",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     if (editingStory) {
       updateMutation.mutate({ id: editingStory.id, data });
     } else {
@@ -220,19 +213,11 @@ export default function AdminPage() {
           </div>
           <div className="flex items-center gap-4">
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
-              setIsDialogOpen(open);
-              if (!open) {
-                setEditingStory(null);
-                form.reset({
-                  title: "",
-                  summary: "",
-                  content: "",
-                  coverImageUrl: "",
-                  category: "Politics",
-                  authorName: "",
-                  authorProfileImage: "",
-                  audioUrl: "",
-                });
+              if (!createMutation.isPending && !updateMutation.isPending) {
+                setIsDialogOpen(open);
+                if (!open) {
+                  setEditingStory(null);
+                }
               }
             }}>
               <DialogTrigger asChild>
@@ -264,19 +249,53 @@ export default function AdminPage() {
                       
                       <div className="grid grid-cols-2 gap-6">
                         <FormField control={form.control} name="coverImageUrl" render={({ field }) => (
-                          <FormItem><FormLabel>Cover Image URL</FormLabel><FormControl><Input placeholder="https://example.com/image.jpg" {...field} /></FormControl><p className="text-xs text-muted-foreground mt-1">Tip: Use full URL starting with https://</p><FormMessage /></FormItem>
+                          <FormItem><FormLabel>Cover Image URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="category" render={({ field }) => (
-                          <FormItem><FormLabel>Category</FormLabel><FormControl><Input {...field} value={field.value ?? ""} placeholder="e.g. Technology" /></FormControl><FormMessage /></FormItem>
+                          <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                value={field.value ?? ""} 
+                                placeholder="e.g. Technology" 
+                                onChange={(e) => field.onChange(e.target.value)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
                         )} />
                       </div>
+
+                      <FormField
+                        control={form.control}
+                        name="isBreaking"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>
+                                Mark as Breaking News
+                              </FormLabel>
+                              <CardDescription>
+                                This will add the "Breaking" badge to the story on the home page.
+                              </CardDescription>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
                       
                       <div className="grid grid-cols-2 gap-6 pb-6">
                         <FormField control={form.control} name="authorName" render={({ field }) => (
                           <FormItem><FormLabel>Author Name</FormLabel><FormControl><Input placeholder="Full name" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="authorProfileImage" render={({ field }) => (
-                          <FormItem><FormLabel>Author Avatar URL</FormLabel><FormControl><Input {...field} value={field.value ?? ""} placeholder="https://example.com/avatar.jpg" /></FormControl><p className="text-xs text-muted-foreground mt-1">Optional: Full URL to author profile image</p><FormMessage /></FormItem>
+                          <FormItem><FormLabel>Author Avatar URL</FormLabel><FormControl><Input {...field} value={field.value ?? ""} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
                         )} />
                       </div>
                       

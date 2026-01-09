@@ -1,9 +1,6 @@
 import nodemailer from "nodemailer";
 
-export async function sendEmail({ to, subject, text, html }: { to?: string; subject: string; text?: string; html?: string }) {
-  // Use provided 'to' or fallback to environment variable
-  const recipient = to || process.env.ADMIN_EMAIL || process.env.USER_EMAIL; 
-
+export async function sendEmail({ to, subject, text, html }: { to: string; subject: string; text?: string; html?: string }) {
   // Fallback to console log if no SMTP configured
   if (!process.env.SMTP_HOST) {
     console.log("SMTP not configured. Email content:");
@@ -25,7 +22,7 @@ export async function sendEmail({ to, subject, text, html }: { to?: string; subj
 
   return await transporter.sendMail({
     from: process.env.EMAIL_FROM || "noreply@thescope.com",
-    to: recipient,
+    to: to,
     subject,
     text,
     html,
