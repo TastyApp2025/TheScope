@@ -4,7 +4,7 @@ export async function generateAudio(text: string): Promise<Buffer> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error(
-      "OPENAI_API_KEY is not set. Set the environment variable OPENAI_API_KEY to enable audio generation."
+      "AUDIO_SERVICE_UNAVAILABLE"
     );
   }
 

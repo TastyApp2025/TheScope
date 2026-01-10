@@ -207,9 +207,21 @@ export async function registerRoutes(
       res.send(audioBuffer);
     } catch (err) {
       console.error(err);
-      const message = err instanceof Error ? err.message : "Failed to generate audio";
-      const status = /OPENAI_API_KEY|OpenAI_API_KEY/i.test(message) ? 503 : 500;
-      res.status(status).json({ message });
+      const errorMessage = err instanceof Error ? err.message : "Failed to generate audio";
+      
+      // Map technical errors to user-friendly messages
+      let userMessage = "Failed to generate audio. Please try again later.";
+      let status = 500;
+      
+      if (errorMessage === "AUDIO_SERVICE_UNAVAILABLE") {
+        userMessage = "Audio generation is not currently available. Please contact the administrator.";
+        status = 503;
+      } else if (errorMessage.includes("quota")) {
+        userMessage = "Audio generation quota exceeded. Please try again later.";
+        status = 429;
+      }
+      
+      res.status(status).json({ message: userMessage })
     }
   });
 
