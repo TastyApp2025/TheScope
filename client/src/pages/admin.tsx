@@ -379,6 +379,7 @@ export default function AdminPage() {
                                   src={coverImagePreview} 
                                   alt="Preview" 
                                   className="max-h-32 object-cover rounded"
+                                  crossOrigin="anonymous"
                                   onLoad={() => setImageLoadError(false)}
                                   onError={() => setImageLoadError(true)}
                                 />
