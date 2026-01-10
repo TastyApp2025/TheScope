@@ -37,6 +37,7 @@ export default function AdminPage() {
   const [generatingAudioId, setGeneratingAudioId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [imageLoadError, setImageLoadError] = useState(false);
+  const [coverImagePreview, setCoverImagePreview] = useState("");
 
   const { data: stories, isLoading } = useQuery<Story[]>({
     queryKey: ["/api/stories"],
@@ -172,18 +173,21 @@ export default function AdminPage() {
   // Update form when editingStory changes
   useEffect(() => {
     if (editingStory) {
+      const coverUrl = editingStory.coverImageUrl || "";
+      setCoverImagePreview(coverUrl);
       form.reset({
         title: editingStory.title || "",
         summary: editingStory.summary || "",
         content: editingStory.content || "",
-        coverImageUrl: editingStory.coverImageUrl || "",
-        category: editingStory.category || "Politics",
+        coverImageUrl: coverUrl,
+        category: editingStory.category ?? "Politics",
         authorName: editingStory.authorName || "",
-        authorProfileImage: editingStory.authorProfileImage || "",
-        audioUrl: editingStory.audioUrl || "",
-        isBreaking: editingStory.isBreaking || false,
+        authorProfileImage: editingStory.authorProfileImage ?? "",
+        audioUrl: editingStory.audioUrl ?? "",
+        isBreaking: editingStory.isBreaking ?? false,
       });
     } else {
+      setCoverImagePreview("");
       form.reset({
         title: "",
         summary: "",
@@ -566,7 +570,6 @@ export default function AdminPage() {
                           className="h-9 w-9 text-slate-500"
                           onClick={() => {
                             setEditingStory(story);
-                            form.reset(story);
                             setIsDialogOpen(true);
                           }}
                         >
