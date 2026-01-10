@@ -1,3 +1,4 @@
+import { insertStorySchema, stories } from "@shared/schema";
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
@@ -27,6 +28,7 @@ export async function registerRoutes(
       if (token) {
         const resetUrl = `${req.protocol}://${req.get("host")}/reset-password?token=${token}`;
         await sendEmail({
+          to: email,
           subject: "Password Reset Request",
           text: `To reset your password, please click the following link: ${resetUrl}`,
           html: `<p>To reset your password, please click the following link: <a href="${resetUrl}">${resetUrl}</a></p>`,
@@ -208,6 +210,24 @@ export async function registerRoutes(
       const message = err instanceof Error ? err.message : "Failed to generate audio";
       const status = /OPENAI_API_KEY|OpenAI_API_KEY/i.test(message) ? 503 : 500;
       res.status(status).json({ message });
+    }
+  });
+
+  app.put("/api/stories/:id", requireAuth, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const input = insertStorySchema.partial().parse(req.body);
+      const story = await storage.updateStory(id, input);
+      if (!story) return res.status(404).json({ message: "Story not found" });
+      res.json(story);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      res.status(500).json({ message: err instanceof Error ? err.message : "Internal Server Error" });
     }
   });
 

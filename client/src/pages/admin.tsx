@@ -296,7 +296,7 @@ export default function AdminPage() {
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="z-[100] bg-white dark:bg-slate-900 border shadow-md">
                                   <SelectItem value="Politics">Politics</SelectItem>
                                   <SelectItem value="Crime">Crime</SelectItem>
                                   <SelectItem value="Technology">Technology</SelectItem>

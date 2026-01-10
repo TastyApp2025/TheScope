@@ -84,7 +84,7 @@ app.use((req, res, next) => {
   // Render default is 10000, but respects PORT if set
   // This serves both the API and the client.
   // It is the only port that is not firewalled on constrained platforms.
-  const port = parseInt(process.env.PORT || "5001", 10);
+  const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(
     {
       port,
