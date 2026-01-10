@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -47,13 +48,27 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create story");
+      if (!res.ok) {
+        let errMsg = "Failed to create story";
+        try {
+          const body = await res.json();
+          if (body?.message) errMsg = body.message;
+        } catch {}
+        throw new Error(errMsg);
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/stories"] });
       setIsDialogOpen(false);
       toast({ title: "Success", description: "Story created successfully" });
+    },
+    onError: (error) => {
+      toast({
+        title: "Creation Failed",
+        description: error instanceof Error ? error.message : "Could not create story",
+        variant: "destructive"
+      });
     },
   });
 
@@ -64,7 +79,14 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update story");
+      if (!res.ok) {
+        let errMsg = "Failed to update story";
+        try {
+          const body = await res.json();
+          if (body?.message) errMsg = body.message;
+        } catch {}
+        throw new Error(errMsg);
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -72,6 +94,13 @@ export default function AdminPage() {
       setIsDialogOpen(false);
       setEditingStory(null);
       toast({ title: "Success", description: "Story updated successfully" });
+    },
+    onError: (error) => {
+      toast({
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "Could not update story",
+        variant: "destructive"
+      });
     },
   });
 
@@ -257,18 +286,27 @@ export default function AdminPage() {
                       
                       <div className="grid grid-cols-2 gap-6">
                         <FormField control={form.control} name="coverImageUrl" render={({ field }) => (
-                          <FormItem><FormLabel>Cover Image URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
+                          <FormItem><FormLabel>Cover Image URL <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="https://example.com/image.jpg" {...field} value={field.value || ""} required /></FormControl><FormMessage /><p className="text-xs text-muted-foreground mt-1">Required. Paste a direct image link.</p></FormItem>
                         )} />
                         <FormField control={form.control} name="category" render={({ field }) => (
                           <FormItem>
                             <FormLabel>Category</FormLabel>
                             <FormControl>
-                              <Input 
-                                {...field} 
-                                value={field.value ?? ""} 
-                                placeholder="e.g. Technology" 
-                                onChange={(e) => field.onChange(e.target.value)}
-                              />
+                              <Select value={field.value ?? "Politics"} onValueChange={field.onChange}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Politics">Politics</SelectItem>
+                                  <SelectItem value="Crime">Crime</SelectItem>
+                                  <SelectItem value="Technology">Technology</SelectItem>
+                                  <SelectItem value="Sports">Sports</SelectItem>
+                                  <SelectItem value="Health">Health</SelectItem>
+                                  <SelectItem value="Business">Business</SelectItem>
+                                  <SelectItem value="Entertainment">Entertainment</SelectItem>
+                                  <SelectItem value="World">World</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
