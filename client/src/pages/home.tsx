@@ -23,8 +23,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950">
       <Helmet>
-        <title>The Scope | Latest Stories</title>
-        <meta name="description" content="Browse the latest editorial stories, news, and insights on The Scope." />
+        <title>the Scope | What You Need To Know</title>
+        <meta name="description" content="Browse the latest editorial stories, news, and insights on the Scope." />
         <link rel="canonical" href="https://thescope.replit.app/" />
       </Helmet>
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-slate-950 border-b border-gray-100 dark:border-gray-800 shadow-sm">

@@ -59,6 +59,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center p-4">
+      <Helmet>
+        <title>the Scope | Admin Login</title>
+        <meta name="description" content="Sign in to your editorial dashboard." />
+      </Helmet>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="font-serif text-4xl font-black text-primary dark:text-white">

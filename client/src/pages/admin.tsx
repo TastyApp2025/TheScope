@@ -36,6 +36,8 @@ export default function AdminPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [generatingAudioId, setGeneratingAudioId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [coverImagePreview, setCoverImagePreview] = useState<string>("");
+  const [imageLoadError, setImageLoadError] = useState(false);
 
   const { data: stories, isLoading } = useQuery<Story[]>({
     queryKey: ["/api/stories"],
@@ -272,13 +274,53 @@ export default function AdminPage() {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                       <div className="space-y-4">
                         <FormField control={form.control} name="title" render={({ field }) => (
-                          <FormItem><FormLabel>Headline</FormLabel><FormControl><Input placeholder="Enter a catchy headline..." {...field} /></FormControl><FormMessage /></FormItem>
+                          <FormItem>
+                            <FormLabel>Headline</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter a catchy headline..." 
+                                {...field}
+                                maxLength={120}
+                              />
+                            </FormControl>
+                            <div className="flex justify-between items-center">
+                              <FormMessage />
+                              <p className="text-xs text-muted-foreground">{field.value?.length || 0}/120</p>
+                            </div>
+                          </FormItem>
                         )} />
                         <FormField control={form.control} name="summary" render={({ field }) => (
-                          <FormItem><FormLabel>Snippet / Summary</FormLabel><FormControl><Textarea placeholder="Brief overview of the story..." {...field} /></FormControl><FormMessage /></FormItem>
+                          <FormItem>
+                            <FormLabel>Snippet / Summary</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Brief overview of the story..." 
+                                {...field}
+                                maxLength={250}
+                              />
+                            </FormControl>
+                            <div className="flex justify-between items-center">
+                              <FormMessage />
+                              <p className="text-xs text-muted-foreground">{field.value?.length || 0}/250</p>
+                            </div>
+                          </FormItem>
                         )} />
                         <FormField control={form.control} name="content" render={({ field }) => (
-                          <FormItem><FormLabel>Story Content</FormLabel><FormControl><Textarea placeholder="Write the full story here..." {...field} className="min-h-[300px] font-serif leading-relaxed" /></FormControl><FormMessage /></FormItem>
+                          <FormItem>
+                            <FormLabel>Story Content</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Write the full story here..." 
+                                {...field} 
+                                className="min-h-[300px] font-serif leading-relaxed"
+                                maxLength={5000}
+                              />
+                            </FormControl>
+                            <div className="flex justify-between items-center">
+                              <FormMessage />
+                              <p className="text-xs text-muted-foreground">{field.value?.length || 0}/5000</p>
+                            </div>
+                          </FormItem>
                         )} />
                       </div>
                       
@@ -286,7 +328,37 @@ export default function AdminPage() {
                       
                       <div className="grid grid-cols-2 gap-6">
                         <FormField control={form.control} name="coverImageUrl" render={({ field }) => (
-                          <FormItem><FormLabel>Cover Image URL <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="https://example.com/image.jpg" {...field} value={field.value || ""} required /></FormControl><FormMessage /><p className="text-xs text-muted-foreground mt-1">Required. Paste a direct image link.</p></FormItem>
+                          <FormItem>
+                            <FormLabel>Cover Image URL <span className="text-destructive">*</span></FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="https://example.com/image.jpg" 
+                                {...field} 
+                                value={field.value || ""} 
+                                required 
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  setCoverImagePreview(e.target.value);
+                                  setImageLoadError(false);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                            <p className="text-xs text-muted-foreground mt-1">Required. Paste a direct image link (jpg, png, gif, webp).</p>
+                            {coverImagePreview && (
+                              <div className="mt-3 p-2 border rounded">
+                                <img 
+                                  src={coverImagePreview} 
+                                  alt="Preview" 
+                                  className="max-h-32 object-cover rounded"
+                                  onLoad={() => setImageLoadError(false)}
+                                  onError={() => setImageLoadError(true)}
+                                />
+                                {imageLoadError && <p className="text-xs text-destructive mt-1">❌ Image failed to load. Check the URL.</p>}
+                                {!imageLoadError && coverImagePreview && <p className="text-xs text-green-600 mt-1">✓ Image loaded successfully</p>}
+                              </div>
+                            )}
+                          </FormItem>
                         )} />
                         <FormField control={form.control} name="category" render={({ field }) => (
                           <FormItem>

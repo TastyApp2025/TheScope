@@ -19,7 +19,44 @@ export const stories = pgTable("stories", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertStorySchema = createInsertSchema(stories).omit({ id: true, createdAt: true });
+export const insertStorySchema = createInsertSchema(stories)
+  .omit({ id: true, createdAt: true })
+  .refine(
+    (data) => {
+      // Validate URL format for coverImageUrl
+      try {
+        new URL(data.coverImageUrl);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    {
+      message: "Cover image must be a valid URL (e.g., https://example.com/image.jpg)",
+      path: ["coverImageUrl"],
+    }
+  )
+  .refine(
+    (data) => data.title.length <= 120,
+    {
+      message: "Title must be 120 characters or less",
+      path: ["title"],
+    }
+  )
+  .refine(
+    (data) => data.summary.length <= 250,
+    {
+      message: "Summary must be 250 characters or less",
+      path: ["summary"],
+    }
+  )
+  .refine(
+    (data) => data.content.length <= 5000,
+    {
+      message: "Content must be 5000 characters or less",
+      path: ["content"],
+    }
+  );
 
 export type Story = typeof stories.$inferSelect;
 export type InsertStory = z.infer<typeof insertStorySchema>;

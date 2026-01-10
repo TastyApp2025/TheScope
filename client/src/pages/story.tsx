@@ -155,7 +155,7 @@ export default function StoryPage() {
   return (
     <main className="relative w-full max-w-md mx-auto bg-white dark:bg-slate-900 min-h-screen shadow-2xl overflow-hidden">
       <Helmet>
-        <title>{`${story.title} | The Scope`}</title>
+        <title>{`${story.title} | the Scope`}</title>
         <meta name="description" content={story.summary} />
         <meta property="og:title" content={story.title} />
         <meta property="og:description" content={story.summary} />

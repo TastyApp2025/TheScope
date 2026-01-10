@@ -3,8 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";import { Helmet } from "react-helmet-async";import { useAuth } from "@/hooks/use-auth";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -86,6 +85,10 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center p-4">
+      <Helmet>
+        <title>the Scope | Create Account</title>
+        <meta name="description" content="Create your editorial account." />
+      </Helmet>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="font-serif text-4xl font-black text-primary dark:text-white">

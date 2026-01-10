@@ -42,6 +42,10 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center p-4">
+      <Helmet>
+        <title>the Scope | Forgot Password</title>
+        <meta name="description" content="Reset your password." />
+      </Helmet>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="font-serif text-4xl font-black text-primary dark:text-white">

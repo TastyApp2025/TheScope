@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -48,6 +49,10 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
+      <Helmet>
+        <title>the Scope | Reset Password</title>
+        <meta name="description" content="Set your new password." />
+      </Helmet>
       <div className="w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center">New Password</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
