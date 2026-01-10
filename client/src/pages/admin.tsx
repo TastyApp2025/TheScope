@@ -36,7 +36,6 @@ export default function AdminPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [generatingAudioId, setGeneratingAudioId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [coverImagePreview, setCoverImagePreview] = useState<string>("");
   const [imageLoadError, setImageLoadError] = useState(false);
 
   const { data: stories, isLoading } = useQuery<Story[]>({
@@ -167,10 +166,23 @@ export default function AdminPage() {
     },
   });
 
+  // Watch coverImageUrl for real-time preview
+  const coverImageUrl = form.watch("coverImageUrl");
+
   // Update form when editingStory changes
   useEffect(() => {
     if (editingStory) {
-      form.reset(editingStory);
+      form.reset({
+        title: editingStory.title || "",
+        summary: editingStory.summary || "",
+        content: editingStory.content || "",
+        coverImageUrl: editingStory.coverImageUrl || "",
+        category: editingStory.category || "Politics",
+        authorName: editingStory.authorName || "",
+        authorProfileImage: editingStory.authorProfileImage || "",
+        audioUrl: editingStory.audioUrl || "",
+        isBreaking: editingStory.isBreaking || false,
+      });
     } else {
       form.reset({
         title: "",
@@ -187,10 +199,22 @@ export default function AdminPage() {
   }, [editingStory, form]);
 
   const onSubmit = (data: any) => {
+    const submissionData: Partial<Story> = {
+      title: data.title || undefined,
+      summary: data.summary || undefined,
+      content: data.content || undefined,
+      coverImageUrl: data.coverImageUrl || undefined,
+      category: data.category || undefined,
+      authorName: data.authorName || undefined,
+      authorProfileImage: data.authorProfileImage || undefined,
+      isBreaking: data.isBreaking || undefined,
+      audioUrl: data.audioUrl || undefined,
+    };
+    
     if (editingStory) {
-      updateMutation.mutate({ id: editingStory.id, data });
+      updateMutation.mutate({ id: editingStory.id, data: submissionData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(submissionData);
     }
   };
 

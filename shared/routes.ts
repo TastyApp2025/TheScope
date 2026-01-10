@@ -7,6 +7,19 @@ export const errorSchemas = {
   internal: z.object({ message: z.string() }),
 };
 
+// Standalone updateStorySchema for PUT requests
+export const updateStorySchema = z.object({
+  title: z.string().max(120).optional(),
+  summary: z.string().max(250).optional(),
+  content: z.string().max(5000).optional(),
+  coverImageUrl: z.string().url('Cover image must be a valid URL').optional(),
+  category: z.string().optional(),
+  authorName: z.string().optional(),
+  authorProfileImage: z.string().nullable().optional(),
+  isBreaking: z.boolean().optional(),
+  audioUrl: z.string().nullable().optional(),
+});
+
 export const api = {
   stories: {
     list: {
@@ -35,7 +48,7 @@ export const api = {
     update: {
       method: 'PUT' as const,
       path: '/api/stories/:id',
-      input: insertStorySchema.partial(),
+      input: updateStorySchema,
       responses: {
         200: z.custom<typeof stories.$inferSelect>(),
         400: errorSchemas.validation,
