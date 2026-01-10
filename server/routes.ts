@@ -216,8 +216,66 @@ export async function registerRoutes(
   app.put("/api/stories/:id", requireAuth, async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const input = insertStorySchema.partial().parse(req.body);
-      const story = await storage.updateStory(id, input);
+
+      // Validate partial updates manually to avoid reliance on `.partial()` at runtime
+      const raw = req.body as Record<string, any>;
+      const updates: Record<string, any> = {};
+
+      if (Object.prototype.hasOwnProperty.call(raw, 'title')) {
+        if (typeof raw.title !== 'string' || raw.title.length === 0 || raw.title.length > 120) {
+          return res.status(400).json({ message: 'Title must be 1-120 characters', field: 'title' });
+        }
+        updates.title = raw.title;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(raw, 'summary')) {
+        if (typeof raw.summary !== 'string' || raw.summary.length > 250) {
+          return res.status(400).json({ message: 'Summary must be 250 characters or less', field: 'summary' });
+        }
+        updates.summary = raw.summary;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(raw, 'content')) {
+        if (typeof raw.content !== 'string' || raw.content.length > 5000) {
+          return res.status(400).json({ message: 'Content must be 5000 characters or less', field: 'content' });
+        }
+        updates.content = raw.content;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(raw, 'coverImageUrl')) {
+        try {
+          new URL(raw.coverImageUrl);
+        } catch {
+          return res.status(400).json({ message: 'Cover image must be a valid URL (e.g., https://example.com/image.jpg)', field: 'coverImageUrl' });
+        }
+        updates.coverImageUrl = raw.coverImageUrl;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(raw, 'category')) {
+        if (typeof raw.category !== 'string') return res.status(400).json({ message: 'Invalid category', field: 'category' });
+        updates.category = raw.category;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(raw, 'authorName')) {
+        if (typeof raw.authorName !== 'string' || raw.authorName.length === 0) return res.status(400).json({ message: 'Invalid authorName', field: 'authorName' });
+        updates.authorName = raw.authorName;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(raw, 'authorProfileImage')) {
+        if (raw.authorProfileImage && typeof raw.authorProfileImage !== 'string') return res.status(400).json({ message: 'Invalid authorProfileImage', field: 'authorProfileImage' });
+        updates.authorProfileImage = raw.authorProfileImage;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(raw, 'isBreaking')) {
+        updates.isBreaking = !!raw.isBreaking;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(raw, 'audioUrl')) {
+        if (raw.audioUrl && typeof raw.audioUrl !== 'string') return res.status(400).json({ message: 'Invalid audioUrl', field: 'audioUrl' });
+        updates.audioUrl = raw.audioUrl;
+      }
+
+      const story = await storage.updateStory(id, updates);
       if (!story) return res.status(404).json({ message: "Story not found" });
       res.json(story);
     } catch (err) {
