@@ -209237,7 +209237,38 @@ var stories = pgTable("stories", {
   publishedAt: timestamp("published_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow()
 });
-var insertStorySchema = createInsertSchema(stories).omit({ id: true, createdAt: true });
+var insertStorySchema = createInsertSchema(stories).omit({ id: true, createdAt: true }).refine(
+  (data) => {
+    try {
+      new URL(data.coverImageUrl);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  {
+    message: "Cover image must be a valid URL (e.g., https://example.com/image.jpg)",
+    path: ["coverImageUrl"]
+  }
+).refine(
+  (data) => data.title.length <= 120,
+  {
+    message: "Title must be 120 characters or less",
+    path: ["title"]
+  }
+).refine(
+  (data) => data.summary.length <= 250,
+  {
+    message: "Summary must be 250 characters or less",
+    path: ["summary"]
+  }
+).refine(
+  (data) => data.content.length <= 5e3,
+  {
+    message: "Content must be 5000 characters or less",
+    path: ["content"]
+  }
+);
 
 // server/db.ts
 var { Pool: Pool2 } = import_pg3.default;
@@ -217984,16 +218015,16 @@ OpenAI.Videos = Videos;
 
 // server/openai.ts
 async function generateAudio(text2) {
-  const apiKey = process.env.OpenAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error(
-      "OpenAI_API_KEY is not set. Set the environment variable to enable audio generation."
+      "OPENAI_API_KEY is not set. Set the environment variable OPENAI_API_KEY to enable audio generation."
     );
   }
   const openai = new OpenAI({ apiKey });
   const mp3 = await openai.audio.speech.create({
-    model: "tts-1",
-    voice: "alloy",
+    model: "tts-1-hd",
+    voice: "nova",
     input: text2
   });
   return Buffer.from(await mp3.arrayBuffer());
@@ -218031,8 +218062,7 @@ async function resetPassword(token, newPassword) {
 
 // server/utils/email.ts
 var import_nodemailer = __toESM(require_nodemailer(), 1);
-async function sendEmail({ subject, text: text2, html }) {
-  const to = process.env.ADMIN_EMAIL || process.env.USER_EMAIL;
+async function sendEmail({ to, subject, text: text2, html }) {
   if (!process.env.SMTP_HOST) {
     console.log("SMTP not configured. Email content:");
     console.log("Subject:", subject);
@@ -218068,6 +218098,7 @@ async function registerRoutes(httpServer2, app2) {
       if (token) {
         const resetUrl = `${req.protocol}://${req.get("host")}/reset-password?token=${token}`;
         await sendEmail({
+          to: email,
           subject: "Password Reset Request",
           text: `To reset your password, please click the following link: ${resetUrl}`,
           html: `<p>To reset your password, please click the following link: <a href="${resetUrl}">${resetUrl}</a></p>`
@@ -218192,13 +218223,63 @@ async function registerRoutes(httpServer2, app2) {
       res.send(audioBuffer);
     } catch (err2) {
       console.error(err2);
-      res.status(500).json({ message: "Failed to generate audio" });
+      const message = err2 instanceof Error ? err2.message : "Failed to generate audio";
+      const status = /OPENAI_API_KEY|OpenAI_API_KEY/i.test(message) ? 503 : 500;
+      res.status(status).json({ message });
     }
   });
-  app2.put(api.stories.update.path, requireAuth, async (req, res) => {
+  app2.put("/api/stories/:id", requireAuth, async (req, res) => {
     try {
-      const input = api.stories.update.input.parse(req.body);
-      const story = await storage.updateStory(Number(req.params.id), input);
+      const id = Number(req.params.id);
+      const raw = req.body;
+      const updates = {};
+      if (Object.prototype.hasOwnProperty.call(raw, "title")) {
+        if (typeof raw.title !== "string" || raw.title.length === 0 || raw.title.length > 120) {
+          return res.status(400).json({ message: "Title must be 1-120 characters", field: "title" });
+        }
+        updates.title = raw.title;
+      }
+      if (Object.prototype.hasOwnProperty.call(raw, "summary")) {
+        if (typeof raw.summary !== "string" || raw.summary.length > 250) {
+          return res.status(400).json({ message: "Summary must be 250 characters or less", field: "summary" });
+        }
+        updates.summary = raw.summary;
+      }
+      if (Object.prototype.hasOwnProperty.call(raw, "content")) {
+        if (typeof raw.content !== "string" || raw.content.length > 5e3) {
+          return res.status(400).json({ message: "Content must be 5000 characters or less", field: "content" });
+        }
+        updates.content = raw.content;
+      }
+      if (Object.prototype.hasOwnProperty.call(raw, "coverImageUrl")) {
+        try {
+          new URL(raw.coverImageUrl);
+        } catch {
+          return res.status(400).json({ message: "Cover image must be a valid URL (e.g., https://example.com/image.jpg)", field: "coverImageUrl" });
+        }
+        updates.coverImageUrl = raw.coverImageUrl;
+      }
+      if (Object.prototype.hasOwnProperty.call(raw, "category")) {
+        if (typeof raw.category !== "string") return res.status(400).json({ message: "Invalid category", field: "category" });
+        updates.category = raw.category;
+      }
+      if (Object.prototype.hasOwnProperty.call(raw, "authorName")) {
+        if (typeof raw.authorName !== "string" || raw.authorName.length === 0) return res.status(400).json({ message: "Invalid authorName", field: "authorName" });
+        updates.authorName = raw.authorName;
+      }
+      if (Object.prototype.hasOwnProperty.call(raw, "authorProfileImage")) {
+        if (raw.authorProfileImage && typeof raw.authorProfileImage !== "string") return res.status(400).json({ message: "Invalid authorProfileImage", field: "authorProfileImage" });
+        updates.authorProfileImage = raw.authorProfileImage;
+      }
+      if (Object.prototype.hasOwnProperty.call(raw, "isBreaking")) {
+        updates.isBreaking = !!raw.isBreaking;
+      }
+      if (Object.prototype.hasOwnProperty.call(raw, "audioUrl")) {
+        if (raw.audioUrl && typeof raw.audioUrl !== "string") return res.status(400).json({ message: "Invalid audioUrl", field: "audioUrl" });
+        updates.audioUrl = raw.audioUrl;
+      }
+      const story = await storage.updateStory(id, updates);
+      if (!story) return res.status(404).json({ message: "Story not found" });
       res.json(story);
     } catch (err2) {
       if (err2 instanceof external_exports.ZodError) {
@@ -218207,7 +218288,7 @@ async function registerRoutes(httpServer2, app2) {
           field: err2.errors[0].path.join(".")
         });
       }
-      throw err2;
+      res.status(500).json({ message: err2 instanceof Error ? err2.message : "Internal Server Error" });
     }
   });
   app2.delete(api.stories.delete.path, requireAuth, async (req, res) => {
