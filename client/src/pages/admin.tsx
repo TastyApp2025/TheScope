@@ -581,7 +581,7 @@ export default function AdminPage() {
                           size="icon" 
                           className="h-9 w-9 text-destructive hover:bg-destructive/5"
                           onClick={() => {
-                            if (confirm("Permanently delete this article? This action cannot be undone.")) {
+                            if (window.confirm("Permanently delete this article? This action cannot be undone.")) {
                               deleteMutation.mutate(story.id);
                             }
                           }}
