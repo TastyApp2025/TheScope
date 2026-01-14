@@ -48,13 +48,18 @@ export default function ResetPasswordPage() {
   if (!token) return <div>Invalid token</div>;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center p-4">
       <Helmet>
         <title>the Scope | Reset Password</title>
         <meta name="description" content="Set your new password." />
       </Helmet>
       <div className="w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">New Password</h1>
+        <div className="mb-8 text-center">
+          <h1 className="font-serif text-4xl font-black text-primary dark:text-white">
+            The Scope
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">Reset Password</p>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="password"

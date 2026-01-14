@@ -3,7 +3,9 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";import { Helmet } from "react-helmet-async";import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
