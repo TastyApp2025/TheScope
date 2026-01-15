@@ -32,6 +32,8 @@ export default [
         HTMLAudioElement: 'readonly',
         HTMLImageElement: 'readonly',
         alert: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     plugins: {

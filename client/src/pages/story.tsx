@@ -240,7 +240,7 @@ export default function StoryPage() {
         </div>
 
         <article className="prose prose-lg dark:prose-invert prose-headings:font-display prose-p:font-display prose-p:text-gray-800 dark:prose-p:text-gray-200 prose-p:leading-[1.7] max-w-none">
-          <div className="first-letter:text-5xl first-letter:font-serif first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-[-4px] first-letter:text-primary">
+          <div className="first-letter:text-5xl first-letter:font-serif first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-[-4px] first-letter:text-black dark:first-letter:text-white">
             {story.content.split('\n').map((paragraph, i) => (
               paragraph.trim() && <p key={i} className="mb-6">{paragraph}</p>
             ))}

@@ -3,13 +3,17 @@ import { Link } from "wouter";
 import { Story } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, X, LogIn, Settings, LogOut } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { user, logoutMutation } = useAuth();
 
   const { data: stories, isLoading } = useQuery<Story[]>({
     queryKey: ["/api/stories"],
@@ -52,9 +56,42 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                <Menu className="w-6 h-6" />
-              </button>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+                    <Menu className="w-6 h-6" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                  <SheetHeader>
+                    <SheetTitle className="text-left font-serif text-2xl border-b pb-4 mb-4">the Scope</SheetTitle>
+                  </SheetHeader>
+                  <nav className="flex flex-col gap-4">
+                    <Link href="/" className="text-lg font-medium hover:text-primary transition-colors flex items-center gap-2">
+                      Home
+                    </Link>
+                    {user ? (
+                      <>
+                        {user.isAdmin && (
+                          <Link href="/admin" className="text-lg font-medium hover:text-primary transition-colors flex items-center gap-2">
+                            <Settings className="w-5 h-5" /> Admin Dashboard
+                          </Link>
+                        )}
+                        <button 
+                          onClick={() => logoutMutation.mutate()}
+                          className="text-lg font-medium text-red-500 hover:text-red-600 transition-colors flex items-center gap-2 text-left"
+                        >
+                          <LogOut className="w-5 h-5" /> Logout
+                        </button>
+                      </>
+                    ) : (
+                      <Link href="/auth" className="text-lg font-medium hover:text-primary transition-colors flex items-center gap-2">
+                        <LogIn className="w-5 h-5" /> Login / Sign Up
+                      </Link>
+                    )}
+                  </nav>
+                </SheetContent>
+              </Sheet>
               <div className="flex justify-center flex-1">
                 <img 
                   src="/assets/logo.jpg" 
@@ -98,7 +135,7 @@ export default function Home() {
                       Breaking
                     </span>
                   )}
-                  <span className="bg-[#0055cc] text-white text-[10px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded-sm shadow-md">
+                  <span className="bg-black text-white text-[10px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded-sm shadow-md">
                     {story.category || "Politics"}
                   </span>
                 </div>

@@ -23,7 +23,6 @@ export const insertStorySchema = createInsertSchema(stories)
   .omit({ id: true, createdAt: true })
   .refine(
     (data) => {
-      // Validate URL format for coverImageUrl
       try {
         new URL(data.coverImageUrl);
         return true;
@@ -32,7 +31,7 @@ export const insertStorySchema = createInsertSchema(stories)
       }
     },
     {
-      message: "Cover image must be a valid URL (e.g., https://example.com/image.jpg)",
+      message: "Cover image must be a valid URL",
       path: ["coverImageUrl"],
     }
   )

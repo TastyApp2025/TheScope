@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
-import { useAuth } from "@/hooks/use-auth";
+import { queryClient } from "@/lib/queryClient";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -17,7 +17,6 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -72,8 +71,8 @@ export default function RegisterPage() {
       });
 
       // Refresh auth state and redirect
+      await queryClient.invalidateQueries({ queryKey: ["/auth/user"] });
       setLocation("/dashboard-internal");
-      window.location.reload();
     } catch (err: any) {
       toast({
         title: "Registration Failed",

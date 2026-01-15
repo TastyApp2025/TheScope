@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { queryClient } from "@/lib/queryClient";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -40,8 +39,8 @@ export default function LoginPage() {
       });
 
       // Refresh auth state and redirect
+      await queryClient.invalidateQueries({ queryKey: ["/auth/user"] });
       setLocation("/dashboard-internal");
-      window.location.reload();
     } catch (err: any) {
       toast({
         title: "Login Failed",
