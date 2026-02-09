@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link, useLocation } from "wouter";
 import { Story } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Bookmark, Share2, PlayCircle, ChevronDown, Loader2 } from "lucide-react";
+import { ArrowLeft, Bookmark, Share2, PlayCircle, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 
@@ -21,7 +21,16 @@ export default function StoryPage() {
     queryKey: ["/api/stories"],
   });
 
-  const nextStory = allStories?.find(s => s.id > Number(id)) || allStories?.[0];
+  // Sort stories by publishedAt descending to ensure chronological swipe
+  const sortedStories = allStories ? [...allStories].sort((a, b) => {
+    const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    return dateB - dateA;
+  }) : [];
+
+  const currentIndex = sortedStories.findIndex(s => s.id === Number(id));
+  const nextStory = currentIndex !== -1 && currentIndex < sortedStories.length - 1 ? sortedStories[currentIndex + 1] : null;
+  const prevStory = currentIndex > 0 ? sortedStories[currentIndex - 1] : null;
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -33,11 +42,17 @@ export default function StoryPage() {
       
       const touchEnd = e.changedTouches[0].clientY;
       const diff = touchStart.current - touchEnd;
-      const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50;
+      const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200;
+      const isAtTop = window.scrollY <= 100;
 
-      // Swipe up (diff > 100) at the bottom of the page to go to next story
-      if (diff > 100 && isAtBottom && nextStory) {
+      // Swipe up (diff > 50) at the bottom to go to next (older) story
+      if (diff > 50 && isAtBottom && nextStory) {
         setLocation(`/stories/${nextStory.id}`);
+        window.scrollTo(0, 0);
+      }
+      // Swipe down (diff < -50) at the top to go to previous (newer) story
+      else if (diff < -50 && isAtTop && prevStory) {
+        setLocation(`/stories/${prevStory.id}`);
         window.scrollTo(0, 0);
       }
       
@@ -51,7 +66,7 @@ export default function StoryPage() {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [id, nextStory, setLocation]);
+  }, [id, nextStory, prevStory, setLocation]);
 
   const [isAudioLoading, setIsAudioLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -59,7 +74,6 @@ export default function StoryPage() {
   const handleListen = async () => {
     if (!story) return;
 
-    // Toggle play/pause if audio already exists
     if (audioRef.current) {
       if (audioRef.current.paused) {
         audioRef.current.play();
@@ -164,6 +178,32 @@ export default function StoryPage() {
           {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
+
+      {/* Navigation controls for desktop */}
+      <div className="hidden md:block fixed left-1/2 -translate-x-1/2 top-4 z-[60] w-full max-w-md px-4 pointer-events-none">
+        {prevStory && (
+          <button 
+            onClick={() => { setLocation(`/stories/${prevStory.id}`); window.scrollTo(0, 0); }}
+            className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-full shadow-lg border border-gray-100 dark:border-gray-700 hover:bg-white dark:hover:bg-slate-800 transition-all group pointer-events-auto"
+          >
+            <ChevronUp className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
+            <span className="text-xs font-bold uppercase tracking-wider">Newer Article</span>
+          </button>
+        )}
+      </div>
+
+      <div className="hidden md:block fixed left-1/2 -translate-x-1/2 bottom-4 z-[60] w-full max-w-md px-4 pointer-events-none">
+        {nextStory && (
+          <button 
+            onClick={() => { setLocation(`/stories/${nextStory.id}`); window.scrollTo(0, 0); }}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-primary text-white backdrop-blur-md rounded-full shadow-xl hover:bg-primary/90 transition-all group pointer-events-auto animate-pulse"
+          >
+            <span className="text-xs font-bold uppercase tracking-wider">Next Article</span>
+            <ChevronDown className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
+          </button>
+        )}
+      </div>
+
       <nav className="absolute top-0 left-0 w-full z-50 flex items-center justify-between p-4 pt-6 bg-gradient-to-b from-black/60 to-transparent">
         <Link href="/">
           <button className="flex items-center justify-center size-10 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-colors">
@@ -251,25 +291,41 @@ export default function StoryPage() {
         
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Read Next</h3>
         {nextStory && (
-          <Link href={`/stories/${nextStory.id}`}>
-            <div className="flex gap-4 items-start cursor-pointer group">
-              <div 
-                className="w-24 h-24 rounded-lg bg-gray-100 bg-cover bg-center shrink-0 transition-transform group-hover:scale-105" 
-                style={{ backgroundImage: `url(${nextStory.coverImageUrl})` }}
-              ></div>
-              <div>
-                <h4 className="font-bold text-gray-900 dark:text-white leading-snug mb-1 group-hover:text-primary transition-colors">
-                  {nextStory.title}
-                </h4>
-                <span className="text-xs text-gray-500">{nextStory.category}</span>
-              </div>
+          <div 
+            onClick={() => { setLocation(`/stories/${nextStory.id}`); window.scrollTo(0, 0); }}
+            className="flex gap-4 items-start cursor-pointer group"
+          >
+            <div 
+              className="w-24 h-24 rounded-lg bg-gray-100 bg-cover bg-center shrink-0 transition-transform group-hover:scale-105" 
+              style={{ backgroundImage: `url(${nextStory.coverImageUrl})` }}
+            ></div>
+            <div>
+              <h4 className="font-bold text-gray-900 dark:text-white leading-snug mb-1 group-hover:text-primary transition-colors">
+                {nextStory.title}
+              </h4>
+              <span className="text-xs text-gray-500">{nextStory.category}</span>
             </div>
-          </Link>
+          </div>
         )}
         
-        <div className="mt-12 flex flex-col items-center gap-2 opacity-30 animate-bounce">
-          <ChevronDown className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-widest">Swipe for next</span>
+        <div className="mt-12 mb-16 flex flex-col items-center gap-4">
+          {nextStory ? (
+            <div 
+              onClick={() => { setLocation(`/stories/${nextStory.id}`); window.scrollTo(0, 0); }}
+              className="flex flex-col items-center gap-3 cursor-pointer group animate-bounce"
+            >
+              <ChevronDown className="w-8 h-8 text-primary group-hover:translate-y-1 transition-transform" />
+              <div className="flex flex-col items-center">
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">Swipe Up for Next</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">or click to read</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 opacity-50">
+              <span className="text-xs font-black uppercase tracking-[0.2em]">End of Scope</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">You've reached the latest stories</span>
+            </div>
+          )}
         </div>
       </div>
     </main>

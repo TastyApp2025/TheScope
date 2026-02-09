@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Story } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Menu, Search, X, LogIn, Settings, LogOut } from "lucide-react";
 import { Helmet } from "react-helmet-async";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,24 @@ export default function Home() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { user, logoutMutation } = useAuth();
+  const [, setLocation] = useLocation();
 
   const { data: stories, isLoading } = useQuery<Story[]>({
     queryKey: ["/api/stories"],
   });
+
+  useEffect(() => {
+    if (stories && stories.length > 0 && !searchQuery) {
+      // Sort stories by date descending and redirect to the latest one
+      const sortedStories = [...stories].sort((a, b) => {
+        const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+        const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      // Always redirect to the latest story on land
+      setLocation(`/stories/${sortedStories[0].id}`, { replace: true });
+    }
+  }, [stories, searchQuery, setLocation]);
 
   const filteredStories = stories?.filter(story => 
     story.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
